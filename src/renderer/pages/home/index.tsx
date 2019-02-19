@@ -1,4 +1,4 @@
-import { Collapse } from 'antd';
+import { Collapse, Spin } from 'antd';
 import { connect } from 'dva';
 
 const Panel = Collapse.Panel;
@@ -8,22 +8,32 @@ export interface IProps {
 }
 
 function Index({ app }: IProps) {
-  const { homeTitle, items } = app;
+  const { homeTitle, items, contentLoading } = app;
   return (
-    <div style={{ padding: '20px 40px' }}>
-      <h4 style={{textAlign: 'center', marginBottom: 20, fontSize: 20,}}>{homeTitle}</h4>
-      <Collapse accordion>
+    <Spin wrapperClassName="loadingContainer" spinning={contentLoading}>
+      <div style={{ padding: '20px 40px' }}>
         {
-          items.map((item: any) => {
-            return (
-              <Panel header={item.title} key={item.title}>
-                <div dangerouslySetInnerHTML={{ __html: item.content }}></div>
-              </Panel>
-            )
-          })
+          homeTitle ? (
+            <>
+              <h4 style={{textAlign: 'center', marginBottom: 20, fontSize: 20,}}>{homeTitle}</h4>
+              <Collapse accordion>
+                {
+                  items.map((item: any) => {
+                    return (
+                      <Panel header={item.title} key={item.title}>
+                        <div dangerouslySetInnerHTML={{ __html: item.content }}></div>
+                      </Panel>
+                    )
+                  })
+                }
+              </Collapse>
+            </>
+          ) : (
+            <h4 style={{textAlign: 'center', marginBottom: 20, fontSize: 20,}}>请求失败或暂无更新</h4>
+          )
         }
-      </Collapse>
-    </div>
+      </div>
+    </Spin>
   );
 }
 

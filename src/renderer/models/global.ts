@@ -15,35 +15,64 @@ export interface IEffects {
 export default {
   namespace: "app",
   state: {
+    selectUrl: '',
     homeTitle: "",
     items: [],
+    contentLoading: true,
+    listVisible: true,
+    currentItem: {},
+    editVisible: false,
   },
   subscriptions: {
-    setup ({ dispatch, history }: ISub) {
-      history.listen(() => {
+    setup({ dispatch, history }: ISub) {
+      history.listen(location => {
+        const { query } = location;
         dispatch({
           type: 'queryAll',
+          payload: {
+            url: query.url || 'https://javascriptweekly.com/rss/2021nfbe',
+          }
         })
       })
     },
   },
   effects: {
-    * queryAll ({}, { put, call }: IEffects) {
-      const data = yield call( async () => {
-        const feed = await parser.parseURL('https://efe.baidu.com/atom.xml');
-        return feed;
-      })
+    * queryAll({ payload }, { put, call }: IEffects) {
+      const { url } = payload;
       yield put({
         type: 'updateState',
         payload: {
-          homeTitle: data.title,
-          items: data.items,
-        },
+          contentLoading: true,
+          selectUrl: url,
+        }
       })
+      try {
+        const data = yield call(async () => {
+          const feed = await parser.parseURL(url);
+          return feed;
+        })
+        yield put({
+          type: 'updateState',
+          payload: {
+            homeTitle: data.title,
+            items: data.items,
+            contentLoading: false,
+          },
+        });
+      } catch (error) {
+        yield put({
+          type: 'updateState',
+          payload: {
+            homeTitle: '',
+            items: [],
+            contentLoading: false,
+          },
+        });
+      }
     },
   },
   reducers: {
-    updateState (state: any, { payload }: any) {
+    updateState(state: any, { payload }: any) {
       return {
         ...state,
         ...payload,

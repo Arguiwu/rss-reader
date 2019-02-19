@@ -23,6 +23,11 @@ html, body, :global(#root) {
   height: 50px;
   background-color: #1976d2;
 }
+.mainHead.ant-layout-header > i {
+  font-size: 28px;
+  color: #fff;
+  cursor: pointer;
+}
 .mainContainer.ant-layout {
   background-color: #fafafa;
 }
@@ -64,7 +69,9 @@ html, body, :global(#root) {
   font-size: 14px;
   font-style: normal;
 }
-
-.ant-skeleton-paragraph {
-  padding-left: 0;
+.dataSourceTable .ant-table-placeholder {
+  border: none;
+}
+.loadingContainer {
+  height: 100%;
 }
