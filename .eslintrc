@@ -1,0 +1,16 @@
+{
+  "extends": "umi",
+  "parserOptions": {
+    "ecmaFeatures": {
+      "legacyDecorators": true
+    }
+  },
+  "rules": {
+    "no-script-url": "off",
+    "jsx-a11y/anchor-is-valid": "off",
+    "jsx-a11y/anchor-has-content": "off",
+    "jsx-a11y/heading-has-content": "off",
+    "jsx-a11y/alt-text": "off",
+    "react/jsx-no-target-blank": "off"
+  }
+}
