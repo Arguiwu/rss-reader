@@ -1,14 +1,13 @@
 export default {
   outputPath: `../../dist/renderer`,
-  publicPath: "./",
+  publicPath: './',
   plugins: [
     [
-      "umi-plugin-react",
+      'umi-plugin-react',
       {
         antd: true,
         dva: true,
-        dynamicImport: true,
-        title: "阅读器",
+        title: 'RSS阅读器',
         dll: true,
         hardSource: false,
       },

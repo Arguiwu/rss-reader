@@ -11,8 +11,8 @@
     ]
   },
   "scripts": {
-    "start": "cross-env NODE_ENV=development electron ./dist/main/main.js",
-    "start-dev": "cross-env NODE_ENV=production electron ./dist/main/main.js",
+    "start": "cross-env NODE_ENV=production electron ./dist/main/main.js",
+    "start-dev": "npm run build-main-dev && electron ./dist/main/main.js",
     "start:renderer": "cross-env PORT=8090 APP_ROOT=src/renderer umi dev",
     "build-main-prod": "cross-env NODE_ENV=production webpack --config ./build/webpack.main.prod.config.js",
     "build-main-dev": "cross-env NODE_ENV=development webpack --config ./build/webpack.main.config.js",
@@ -23,6 +23,7 @@
     "pack": "npm run build:renderer && npm run build-main-prod && electron-builder --dir"
   },
   "devDependencies": {
+    "@types/nedb": "^1.8.7",
     "@types/node": "^10.12.18",
     "cross-env": "^5.2.0",
     "electron": "^2.0.2",
@@ -39,6 +40,7 @@
     "webpack-merge": "^4.2.1"
   },
   "dependencies": {
+    "nedb": "^1.8.0",
     "rss-parser": "^3.6.2"
   }
 }

@@ -1,6 +1,15 @@
 import Parser from 'rss-parser';
 
-const parser = new Parser();
+import { db } from '../utils'
+
+const getAllData = () => new Promise(resolve => {
+  db.find({}, (err: any, docs: any) => {
+    resolve(docs)
+  })
+})
+const parser = new Parser({
+  defaultRSS: 2.0,
+});
 
 export interface ISub {
   dispatch: any;
@@ -12,32 +21,53 @@ export interface IEffects {
   call: any;
 }
 
+export interface IQueryUrlData {
+  url: string
+}
+
+export interface IQueryUrl {
+  payload: IQueryUrlData
+}
+
 export default {
   namespace: "app",
   state: {
     selectUrl: '',
     homeTitle: "",
     items: [],
+    newItems: [],
     contentLoading: true,
-    listVisible: true,
+    listVisible: false,
     currentItem: {},
     editVisible: false,
   },
   subscriptions: {
     setup({ dispatch, history }: ISub) {
-      history.listen(location => {
+      history.listen((location: any) => {
         const { query } = location;
         dispatch({
-          type: 'queryAll',
+          type: 'queryUrl',
           payload: {
             url: query.url || 'https://javascriptweekly.com/rss/2021nfbe',
           }
+        })
+        dispatch({
+          type: 'queryAllData',
         })
       })
     },
   },
   effects: {
-    * queryAll({ payload }, { put, call }: IEffects) {
+    * queryAllData({}, { put, call }: IEffects) {
+      const allData = yield call(() => getAllData())
+      yield put({
+        type: 'updateState',
+        payload: {
+          newItems: allData,
+        }
+      })
+    },
+    * queryUrl({ payload }: IQueryUrl, { put, call }: IEffects) {
       const { url } = payload;
       yield put({
         type: 'updateState',

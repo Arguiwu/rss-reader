@@ -18,7 +18,7 @@ And then install the dependencies with npm
 
 ## Starting Development
 
-First, start the renderer process (default port 8000)
+First, start the renderer process (default port 8090)
 
 ```javascript
   $ yarn start:renderer
@@ -38,4 +38,4 @@ And then start the main process
 
 ## screenshot
 
-
+[![demo](https://s2.ax1x.com/2019/02/20/k2Jlge.png)]()

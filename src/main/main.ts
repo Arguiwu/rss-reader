@@ -6,8 +6,13 @@ let mainWindow: Electron.BrowserWindow;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    height: 768,
-    width: 1024,
+    webPreferences: {
+      webSecurity: false,
+    },
+    minHeight: 768,
+    minWidth: 1204,
+    width: 1204,
+    height: 768
   });
   if (process.env.NODE_ENV === "development") {
     mainWindow.loadURL("http://localhost:8090/#/");
@@ -16,7 +21,7 @@ function createWindow() {
     mainWindow.loadURL(
       url.format({
         pathname: path.join(__dirname, "../renderer/index.html"),
-        protocol: "file:",
+        protocol: "file",
         slashes: true,
       }),
     );

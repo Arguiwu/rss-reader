@@ -1,7 +1,7 @@
-import { Layout, Modal, Table, Button, Dropdown, Menu, Form, Input, Icon } from 'antd';
+import { Layout, Modal, Table, Button, Dropdown, Menu, Form, Input, Icon, message, BackTop } from 'antd';
 import { connect } from 'dva';
 import router from 'umi/router';
-import { menus } from '../utils'
+import { db } from '../utils'
 
 const { Header, Sider, Content } = Layout;
 const { confirm } = Modal;
@@ -23,10 +23,8 @@ export interface IProps {
 }
 
 function App({ children, app, dispatch, form, }: IProps) {
-  const { selectUrl, listVisible, editVisible, currentItem } = app;
-
+  const { selectUrl, listVisible, editVisible, currentItem, newItems } = app;
   const { getFieldDecorator, validateFields, getFieldsValue } = form;
-
   const clickHandle = (url: string) => {
     router.push(`/home?url=${url}`);
   }
@@ -36,6 +34,7 @@ function App({ children, app, dispatch, form, }: IProps) {
     maskClosable: false,
     title: "数据源管理",
     width: 600,
+    footer: "",
     onOk: () => {
       dispatch({
         type: 'app/updateState',
@@ -65,13 +64,40 @@ function App({ children, app, dispatch, form, }: IProps) {
         const data = {
           ...getFieldsValue(),
         };
-        console.log(data)
-        dispatch({
-          type: 'app/updateState',
-          payload: {
-            editVisible: false,
-          }
-        })
+        const { _id } = currentItem
+        if(!_id) {
+          db.insert(data, (err: any) => {
+            if(err) {
+              message.error("数据插入失败");
+            }else {
+              message.success("数据添加成功")
+              dispatch({
+                type: 'app/updateState',
+                payload: {
+                  editVisible: false,
+                }
+              })
+              dispatch({
+                type: "app/queryAllData"
+              })
+            }
+          });
+        }else {
+          db.update({ _id,  }, { $set: data }, {}, (err: any) => {
+            if(!err) {
+              message.success("数据更新成功")
+              dispatch({
+                type: 'app/updateState',
+                payload: {
+                  editVisible: false,
+                }
+              })
+              dispatch({
+                type: "app/queryAllData"
+              })
+            }
+          });
+        }
       });
     },
     onCancel: () => {
@@ -99,6 +125,14 @@ function App({ children, app, dispatch, form, }: IProps) {
         title: '提示',
         content: '是否删除此数据？',
         onOk() {
+          db.remove({ _id: record._id}, {}, (err:any, numRemoved: number) => {
+            if(!err) {
+              message.success("数据删除成功");
+              dispatch({
+                type: "app/queryAllData"
+              })
+            }
+          })
         }
       });
     }
@@ -153,61 +187,69 @@ function App({ children, app, dispatch, form, }: IProps) {
   ];
 
   const tableProps = {
-    dataSource: menus,
+    dataSource: newItems,
     columns: columns,
-    rowKey: (record: any) => record.id
+    rowKey: (record: any) => record._id
   };
 
   return (
     <div className="mainWrap">
       <Layout>
-        <Header className="mainHead"><Icon type="setting" /></Header>
+        <Header className="mainHead"><Icon type="setting" onClick={() => dispatch({type: 'app/updateState', payload: {listVisible: true,}})} /></Header>
         <Layout className="mainContainer">
           <Sider className="mainSider" width={250}>
             <ul>
               {
-                menus.map((item, index) => {
+                newItems.map((item: any, index: number) => {
                   if (selectUrl) {
-                    return <li key={item.id} onClick={() => clickHandle(item.url)} className={`${item.url === selectUrl ? 'active' : ''}`}><i>{item.title.slice(0, 1)}</i>{item.title}</li>
+                    return <li key={item._id} onClick={() => clickHandle(item.url)} className={`${item.url === selectUrl ? 'active' : ''}`}><i>{item.title.slice(0, 1)}</i>{item.title}</li>
                   }
-                  return <li key={item.id} onClick={() => clickHandle(item.url)} className={`${index === 0 ? 'active' : ''}`}><i>{item.title.slice(0, 1)}</i>{item.title}</li>
+                  return <li key={item._id} onClick={() => clickHandle(item.url)} className={`${index === 0 ? 'active' : ''}`}><i>{item.title.slice(0, 1)}</i>{item.title}</li>
                 })
               }
             </ul>
           </Sider>
-          <Content className="mainContent">{children}</Content>
+          <Content className="mainContent" id="mainContainer">{children}<BackTop target={() => document.getElementById('mainContainer')} /></Content>
         </Layout>
       </Layout>
-      <Modal {...listModalProps}>
-        <Button type="primary" style={{ marginBottom: 20, }} onClick={addData}>新增数据</Button>
-        <Table {...tableProps} className="dataSourceTable" />
-      </Modal>
-      <Modal {...editModalProps}>
-        <Form layout="horizontal">
-          <FormItem label="数据源名称" hasFeedback {...formItemLayout}>
-            {getFieldDecorator("title", {
-              initialValue: currentItem.title,
-              rules: [
-                {
-                  required: true,
-                  message: "数据源名称必须填写",
-                },
-              ],
-            })(<Input />)}
-          </FormItem>
-          <FormItem label="数据源地址" hasFeedback {...formItemLayout}>
-            {getFieldDecorator("url", {
-              initialValue: currentItem.url,
-              rules: [
-                {
-                  required: true,
-                  message: "数据源地址必须填写",
-                },
-              ],
-            })(<Input />)}
-          </FormItem>
-        </Form>
-      </Modal>
+      {
+        listVisible && (
+          <Modal {...listModalProps}>
+            <Button type="primary" style={{ marginBottom: 20, }} onClick={addData}>新增数据</Button>
+            <Table {...tableProps} className="dataSourceTable" />
+          </Modal>
+        )
+      }
+      {
+        editVisible && (
+          <Modal {...editModalProps}>
+            <Form layout="horizontal">
+              <FormItem label="数据源名称" hasFeedback {...formItemLayout}>
+                {getFieldDecorator("title", {
+                  initialValue: currentItem.title,
+                  rules: [
+                    {
+                      required: true,
+                      message: "数据源名称必须填写",
+                    },
+                  ],
+                })(<Input />)}
+              </FormItem>
+              <FormItem label="数据源地址" hasFeedback {...formItemLayout}>
+                {getFieldDecorator("url", {
+                  initialValue: currentItem.url,
+                  rules: [
+                    {
+                      required: true,
+                      message: "数据源地址必须填写",
+                    },
+                  ],
+                })(<Input />)}
+              </FormItem>
+            </Form>
+          </Modal>
+        )
+      }
     </div>
   );
 }
